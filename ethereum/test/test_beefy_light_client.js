@@ -17,7 +17,10 @@ describe("Beefy Light Client", function () {
   before(async function () {
     this.timeout(10 * 1000)
 
-    this.beefyLightClient = await deployBeefyLightClient();
+    this.validatorsMerkleTree = createMerkleTree(fixture.validatorPublicKeysUncompressedScale);
+    // console.log(this.validatorsMerkleTree.getHexRoot())
+    this.beefyLightClient = await deployBeefyLightClient(fixture.validatorsRoot,
+      fixture.validatorPublicKeysUncompressedScale.length, fixture.startingValidatorSetID);
   });
 
   it("encodes beefy mmr leaves correctly", async function () {
@@ -41,7 +44,7 @@ describe("Beefy Light Client", function () {
       initialBitfield,
       fixture.signatures[0],
       0,
-      fixture.validatorPublicKeys[0],
+      fixture.validatorPublicKeysUncompressedScale[0],
       fixture.validatorPublicKeyProofs[0]
     )
 
@@ -59,7 +62,7 @@ describe("Beefy Light Client", function () {
     const validatorProof = {
       signatures: fixture.signatures,
       positions: [0, 1],
-      publicKeys: fixture.validatorPublicKeys,
+      publicKeys: fixture.validatorPublicKeysUncompressedScale,
       publicKeyMerkleProofs: fixture.validatorPublicKeyProofs
     }
 

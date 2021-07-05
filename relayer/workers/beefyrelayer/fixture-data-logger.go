@@ -81,7 +81,6 @@ func (wr *BeefyEthereumWriter) LogBeefyFixtureDataAll(msg store.CompleteSignatur
 		"hashedLeaf":                         hashedLeaf,
 		"mmrProofItems":                      mmrProofItems,
 	}).Info("Complete Signature Commitment transaction submitted")
-
 }
 
 // Keccak256 is the Keccak256 hashing method

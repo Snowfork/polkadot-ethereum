@@ -78,7 +78,7 @@ contract BeefyLightClient {
     struct ValidatorProof {
         bytes[] signatures;
         uint256[] positions;
-        address[] publicKeys;
+        bytes[] publicKeys;
         bytes32[][] publicKeyMerkleProofs;
     }
 
@@ -196,7 +196,7 @@ contract BeefyLightClient {
         uint256[] memory validatorClaimsBitfield,
         bytes memory validatorSignature,
         uint256 validatorPosition,
-        address validatorPublicKey,
+        bytes calldata validatorPublicKey,
         bytes32[] calldata validatorPublicKeyMerkleProof
     ) public payable {
         /**
@@ -211,13 +211,17 @@ contract BeefyLightClient {
             "Error: Sender must be in validator set at correct position"
         );
 
+        address validatorAddress = address(
+            bytes20(keccak256(validatorPublicKey))
+        );
+
         /**
          * @dev Check if validatorSignature is correct, ie. check if it matches
          * the signature of senderPublicKey on the commitmentHash
          */
         require(
             ECDSA.recover(commitmentHash, validatorSignature) ==
-                validatorPublicKey,
+                validatorAddress,
             "Error: Invalid Signature"
         );
 
@@ -521,7 +525,7 @@ contract BeefyLightClient {
         uint256[] memory randomBitfield,
         bytes calldata signature,
         uint256 position,
-        address publicKey,
+        bytes calldata publicKey,
         bytes32[] calldata publicKeyMerkleProof,
         bytes32 commitmentHash
     ) internal view {
@@ -550,11 +554,13 @@ contract BeefyLightClient {
             "Error: Validator must be in validator set at correct position"
         );
 
+        address validatorAddress = address(bytes20(keccak256(publicKey)));
+
         /**
          * @dev Check if signature is correct
          */
         require(
-            ECDSA.recover(commitmentHash, signature) == publicKey,
+            ECDSA.recover(commitmentHash, signature) == validatorAddress,
             "Error: Invalid Signature"
         );
     }

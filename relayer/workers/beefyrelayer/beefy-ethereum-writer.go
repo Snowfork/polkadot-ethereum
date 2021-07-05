@@ -227,6 +227,11 @@ func (wr *BeefyEthereumWriter) WriteCompleteSignatureCommitment(ctx context.Cont
 	wr.databaseMessages <- updateCmd
 
 	wr.LogBeefyFixtureDataAll(msg, info)
+	msgString, err := wr.GetFailingMessage(*wr.ethereumConn.GetClient(), tx.Hash())
+	wr.log.WithFields(logrus.Fields{
+		"err": err,
+		"msg": msgString,
+	}).Info("Failing message")
 
 	return nil
 }

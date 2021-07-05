@@ -2,6 +2,8 @@ package beefyrelayer
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"encoding/hex"
 	"encoding/json"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -91,12 +93,6 @@ func (li *BeefyRelaychainListener) subBeefyJustifications(ctx context.Context) e
 				return err
 			}
 
-			beefyAuthoritiesBytes, err := json.Marshal(beefyAuthorities)
-			if err != nil {
-				li.log.WithError(err).Error("Failed to marshal BEEFY authorities:", beefyAuthorities)
-				continue
-			}
-
 			blockHash, err := li.relaychainConn.GetAPI().RPC.Chain.GetBlockHash(uint64(blockNumber))
 			if err != nil {
 				li.log.WithError(err).Error("Failed to get block hash")
@@ -115,7 +111,7 @@ func (li *BeefyRelaychainListener) subBeefyJustifications(ctx context.Context) e
 			}
 
 			info := store.BeefyRelayInfo{
-				ValidatorAddresses:       beefyAuthoritiesBytes,
+				ValidatorAddresses:       beefyAuthorities,
 				SignedCommitment:         signedCommitmentBytes,
 				Status:                   store.CommitmentWitnessed,
 				SerializedLatestMMRProof: serializedProof,
@@ -125,7 +121,7 @@ func (li *BeefyRelaychainListener) subBeefyJustifications(ctx context.Context) e
 	}
 }
 
-func (li *BeefyRelaychainListener) getBeefyAuthorities(blockNumber uint64) ([]common.Address, error) {
+func (li *BeefyRelaychainListener) getBeefyAuthorities(blockNumber uint64) ([]string, error) {
 	blockHash, err := li.relaychainConn.GetAPI().RPC.Chain.GetBlockHash(blockNumber)
 	if err != nil {
 		return nil, err
@@ -159,18 +155,21 @@ func (li *BeefyRelaychainListener) getBeefyAuthorities(blockNumber uint64) ([]co
 	}
 
 	// Convert from beefy authorities to ethereum addresses
-	var authorityEthereumAddresses []common.Address
+	var authorityPubkeys []string
 	for _, authority := range authorities {
 		pub, err := crypto.DecompressPubkey(authority[:])
+		pubBytes := crypto.FromECDSAPub(pub)
+		pubHex := hex.EncodeToString(pubBytes)
 		if err != nil {
 			return nil, err
 		}
-		ethereumAddress := crypto.PubkeyToAddress(*pub)
-		if err != nil {
-			return nil, err
-		}
-		authorityEthereumAddresses = append(authorityEthereumAddresses, ethereumAddress)
+		authorityPubkeys = append(authorityPubkeys, pubHex)
 	}
 
-	return authorityEthereumAddresses, nil
+	return authorityPubkeys, nil
+}
+
+func DecompressedKeyToEthAddress(pub *ecdsa.PublicKey) common.Address {
+	ethereumAddress := crypto.PubkeyToAddress(*pub)
+	return ethereumAddress
 }

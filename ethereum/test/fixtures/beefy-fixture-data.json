@@ -8,12 +8,29 @@
     "0x0e19fa9fee8aa4284930bfb9e26d01c55430d83ce7efe13806d3db547963519c65b90051471114c60ea16687dc18ece0065f0b169c0e462cdeceb8b5e170a8031c",
     "0xbf34c1dd5f74c23c747d919a585f5f215305638cedbed216c4f2c2f70845130e2ad5f038037132f423981d44752abc2460b7aecccc951c3af8578509e7d288591b"
   ],
-  "validatorPublicKeys": [
+  "validatorEthereumAddresses": [
     "0xe04cc55ebee1cbce552f250e85c57b70b2e2625b",
     "0x25451a4de12dccc2d166922fa938e900fcc4ed24"
   ],
+  "validatorPublicKeysAuthorities": [
+    "0x020a1091341fe5664bfa1782d5e04779689068c916b04cb365ec3153755684d9a1",
+    "0x0390084fdbf27d2b79d26a4f13f0ccd982cb755a661969143c37cbc49ef5b91f27"
+  ],
+  "validatorPublicKeysUncompressedScale": [
+    "0x040a1091341fe5664bfa1782d5e04779689068c916b04cb365ec3153755684d9a12da8d65fae6d63a4abca410b7e50d50cd95d36001c28712fd2adf944adb03b12",
+    "0x0490084fdbf27d2b79d26a4f13f0ccd982cb755a661969143c37cbc49ef5b91f27baf6745460a3da4942b61272bdd092c6efb9e19a2622b6d8e46d0ab2e3c8e1a5"
+  ],
+  "validatorsRoot": "0x07b13d25743592825cea32c9a24ba67b50b7e90d92cbd1d0f4eab2dc94dba5c6",
   "startingValidatorSetID": 0,
   "validatorPublicKeyProofs": [
+    [
+      "0x0080fcdfb5946b6f617a2cd1a58d583d0c4ef7387df8e3157c6ed571f1841249f477"
+    ],
+    [
+      "0x80d9ac67a89f087c39d1dab13f81f6e90bb7e852675cf20c8edc89713aabea39a600"
+    ]
+  ],
+  "validatorPublicKeyProofsJS": [
     [
       "0xf68aec7304bf37f340dae2ea20fb5271ee28a3128812b84a615da4789e458bde"
     ],

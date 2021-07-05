@@ -26,7 +26,7 @@ const (
 
 type BeefyRelayInfo struct {
 	gorm.Model
-	ValidatorAddresses         []byte
+	ValidatorAddresses         []string
 	SignedCommitment           []byte
 	SerializedLatestMMRProof   []byte
 	ContractID                 int64
@@ -37,7 +37,7 @@ type BeefyRelayInfo struct {
 	CompleteVerificationTxHash common.Hash
 }
 
-func NewBeefyRelayInfo(validatorAddresses, signedCommitment []byte, contractId int64, status Status,
+func NewBeefyRelayInfo(validatorAddresses []string, signedCommitment []byte, contractId int64, status Status,
 	initialVerificationTxHash common.Hash, completeOnBlock uint64, randomSeed,
 	completeVerificationTxHash common.Hash) BeefyRelayInfo {
 	return BeefyRelayInfo{
@@ -53,18 +53,13 @@ func NewBeefyRelayInfo(validatorAddresses, signedCommitment []byte, contractId i
 }
 
 func (b *BeefyRelayInfo) ToBeefyJustification() (BeefyJustification, error) {
-	var validatorAddresses []common.Address
-	if err := json.Unmarshal(b.ValidatorAddresses, &validatorAddresses); err != nil {
-		return BeefyJustification{}, err
-	}
-
 	var signedCommitment SignedCommitment
 	if err := json.Unmarshal(b.SignedCommitment, &signedCommitment); err != nil {
 		return BeefyJustification{}, err
 	}
 
 	return BeefyJustification{
-		ValidatorAddresses: validatorAddresses,
+		ValidatorAddresses: b.ValidatorAddresses,
 		SignedCommitment:   signedCommitment,
 	}, nil
 }

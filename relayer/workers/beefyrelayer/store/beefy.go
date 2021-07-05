@@ -33,14 +33,14 @@ type CompleteSignatureCommitmentMessage struct {
 }
 
 type BeefyJustification struct {
-	ValidatorAddresses []common.Address
-	SignedCommitment   SignedCommitment
+	ValidatorPublicKeys []string
+	SignedCommitment    SignedCommitment
 }
 
-func NewBeefyJustification(validatorAddresses []common.Address, signedCommitment SignedCommitment) BeefyJustification {
+func NewBeefyJustification(validatorPublicKeys []string, signedCommitment SignedCommitment) BeefyJustification {
 	return BeefyJustification{
-		ValidatorAddresses: validatorAddresses,
-		SignedCommitment:   signedCommitment,
+		ValidatorPublicKeys: validatorPublicKeys,
+		SignedCommitment:    signedCommitment,
 	}
 }
 
@@ -58,7 +58,7 @@ func (b *BeefyJustification) BuildNewSignatureCommitmentMessage(valAddrIndex int
 		CommitmentHash:                commitmentHash,
 		ValidatorClaimsBitfield:       initialBitfield,
 		ValidatorSignatureCommitment:  sigValEthereum,
-		ValidatorPublicKey:            b.ValidatorAddresses[valAddrIndex],
+		ValidatorPublicKey:            b.ValidatorPublicKeys[valAddrIndex],
 		ValidatorPosition:             big.NewInt(int64(valAddrIndex)),
 		ValidatorPublicKeyMerkleProof: sig0ProofContents,
 	}

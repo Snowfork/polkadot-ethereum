@@ -57,17 +57,17 @@ contract ValidatorRegistry is Ownable {
 
     /**
      * @notice Checks if a validators address is a member of the merkle tree
-     * @param addr The address of the validator to check
+     * @param pubKey The public key of the validator to check
      * @param pos The position of the validator to check, index starting at 0
      * @param proof Merkle proof required for validation of the address
      * @return Returns true if the validator is in the set
      */
     function checkValidatorInSet(
-        address addr,
+        bytes calldata pubKey,
         uint256 pos,
         bytes32[] memory proof
     ) public view returns (bool) {
-        bytes32 hashedLeaf = keccak256(abi.encodePacked(addr));
+        bytes32 hashedLeaf = keccak256(abi.encodePacked(pubKey));
         return
             MerkleProof.verifyMerkleLeafAtPosition(
                 root,
