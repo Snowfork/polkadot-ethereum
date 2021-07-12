@@ -35,7 +35,7 @@ benchmark_pallets()
     node ../test/scripts/helpers/overrideParachainSpec.js $TMP_DIR/spec.json \
         genesis.runtime.palletBalances.balances.0 "$DOT_MODULE_ENDOWMENT"
 
-    PALLETS="assets basic_channel::inbound dot_app erc20_app eth_app frame_system
+    PALLETS="assets basic_channel::inbound dot_app erc20_app erc721_app eth_app frame_system
         incentivized_channel::inbound incentivized_channel::outbound pallet_balances
         pallet_collective pallet_timestamp pallet_utility verifier_lightclient"
 

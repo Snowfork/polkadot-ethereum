@@ -29,9 +29,6 @@ use sp_std::vec::Vec;
 
 use artemis_core::nft::{TokenInfo, Nft};
 
-// TODO add
-// mod benchmarking;
-
 #[cfg(test)]
 mod mock;
 
