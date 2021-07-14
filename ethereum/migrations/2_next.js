@@ -148,13 +148,22 @@ module.exports = function (deployer, network, accounts) {
     // TODO: deploy the contract in this migration and use its address
     let administrator = accounts[0];
 
-    // Fee for incentivized channel
+    // Post-construction initialization for Basic outbound channel
+    if (!("BASIC_CHANNEL_PRINCIPAL" in process.env)) {
+      throw "Missing BASIC_CHANNEL_PRINCIPAL in environment config"
+    }
+    const principal = process.env.BASIC_CHANNEL_PRINCIPAL
+    await channels.basic.outbound.instance.initialize(
+      administrator,
+      principal,
+      [dotApp.address, ethApp.address, erc20App.address]
+    );
+
+    // Post-construction initialization for Incentivized outbound channel
     if (!("INCENTIVIZED_CHANNEL_FEE" in process.env)) {
       throw "Missing INCENTIVIZED_CHANNEL_FEE in environment config"
     }
     const fee = process.env.INCENTIVIZED_CHANNEL_FEE
-
-    // Post-construction initialization for Incentivized outbound channel
     await channels.incentivized.outbound.instance.initialize(
       administrator,
       dotApp.address,

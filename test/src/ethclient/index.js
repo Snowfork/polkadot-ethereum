@@ -6,7 +6,6 @@ const ERC20App = require('../../../ethereum/build/contracts/ERC20App.json');
 const ERC721App = require('../../../ethereum/build/contracts/ERC721App.json');
 const ERC20 = require('../../../ethereum/build/contracts/ERC20.json');
 const TestToken = require('../../../ethereum/build/contracts/TestToken.json');
-const ERC721 = require('../../../ethereum/build/contracts/ERC721.json');
 const TestToken721 = require('../../../ethereum/build/contracts/TestToken721.json');
 const DOTApp = require('../../../ethereum/build/contracts/DOTApp.json');
 const WrappedToken = require('../../../ethereum/build/contracts/WrappedToken.json');

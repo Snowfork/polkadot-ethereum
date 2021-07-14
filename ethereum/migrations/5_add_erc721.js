@@ -37,8 +37,11 @@ module.exports = function (deployer, network, accounts) {
     );
     await deployer.deploy(TestToken721, "Test Token 721", "TEST721");
 
-    // Authorize ERC721 app to use incentivized outbound channel
+    // Authorize ERC721 app to use outbound channels
     let administrator = accounts[0];
+    await basicOutboundChannelInstance.authorizeDefaultOperator(
+      erc721AppInstance.address, { from: administrator }
+    );
     await incentivizedOutboundChannelInstance.authorizeDefaultOperator(
       erc721AppInstance.address, { from: administrator }
     );
