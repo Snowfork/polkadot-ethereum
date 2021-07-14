@@ -28,9 +28,14 @@ type BeefyEthereumWriter struct {
 	log              *logrus.Entry
 }
 
-func NewBeefyEthereumWriter(ethereumConfig *ethereum.Config, ethereumConn *ethereum.Connection, beefyDB *store.Database,
-	databaseMessages chan<- store.DatabaseCmd, beefyMessages <-chan store.BeefyRelayInfo,
-	log *logrus.Entry) *BeefyEthereumWriter {
+func NewBeefyEthereumWriter(
+	ethereumConfig *ethereum.Config,
+	ethereumConn *ethereum.Connection,
+	beefyDB *store.Database,
+	databaseMessages chan<- store.DatabaseCmd,
+	beefyMessages <-chan store.BeefyRelayInfo,
+	log *logrus.Entry,
+) *BeefyEthereumWriter {
 	return &BeefyEthereumWriter{
 		ethereumConfig:   ethereumConfig,
 		ethereumConn:     ethereumConn,
@@ -62,6 +67,7 @@ func (wr *BeefyEthereumWriter) onDone(ctx context.Context) error {
 	for range wr.beefyMessages {
 		wr.log.Debug("Discarded BEEFY message")
 	}
+
 	return ctx.Err()
 }
 

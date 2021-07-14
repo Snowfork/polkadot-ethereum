@@ -10,14 +10,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/snowfork/go-substrate-rpc-client/v3/types"
 	"github.com/snowfork/polkadot-ethereum/relayer/chain/ethereum"
 	"github.com/snowfork/polkadot-ethereum/relayer/chain/parachain"
 	"github.com/snowfork/polkadot-ethereum/relayer/chain/relaychain"
 	"github.com/snowfork/polkadot-ethereum/relayer/contracts/beefylightclient"
 )
-
-//TODO - put in config
-const OUR_PARACHAIN_ID = 200
 
 type BeefyListener struct {
 	ethereumConfig      *ethereum.Config
@@ -25,6 +23,7 @@ type BeefyListener struct {
 	beefyLightClient    *beefylightclient.Contract
 	relaychainConn      *relaychain.Connection
 	parachainConnection *parachain.Connection
+	paraID              uint32
 	messages            chan<- MessagePackage
 	log                 *logrus.Entry
 }
@@ -55,6 +54,26 @@ func (li *BeefyListener) Start(ctx context.Context, eg *errgroup.Group) error {
 	}
 	li.beefyLightClient = beefyLightClientContract
 
+	// Fetch ParaId
+	storageKeyForParaID, err := types.CreateStorageKey(li.parachainConnection.GetMetadata(), "ParachainInfo", "ParachainId", nil, nil)
+	if err != nil {
+		return err
+	}
+
+	var paraID uint32
+	ok, err := li.parachainConnection.GetAPI().RPC.State.GetStorageLatest(storageKeyForParaID, &paraID)
+	if err != nil {
+		li.log.WithError(err).Error("Failed to get para id for snowbridge")
+		return err
+	}
+	if !ok {
+		li.log.Error("Expected parachain but chain does not provide a parachain ID")
+		return fmt.Errorf("invalid parachain")
+	}
+
+	li.log.WithField("paraId", paraID).Info("Fetched parachain id")
+	li.paraID = paraID
+
 	eg.Go(func() error {
 
 		verifiedBeefyBlockNumber, verifiedBeefyBlockHash, err := li.fetchLatestVerifiedBeefyBlock(ctx)
@@ -64,7 +83,7 @@ func (li *BeefyListener) Start(ctx context.Context, eg *errgroup.Group) error {
 		}
 
 		verifiedParaBlockNumber, err := li.relaychainConn.FetchLatestFinalizedParaBlockNumber(
-			verifiedBeefyBlockHash, OUR_PARACHAIN_ID)
+			verifiedBeefyBlockHash, paraID)
 		if err != nil {
 			li.log.WithError(err).Error("Failed to get latest finalized para block number from relay chain")
 			return err
@@ -156,7 +175,7 @@ func (li *BeefyListener) processBeefyLightClientEvents(ctx context.Context, even
 		li.log.WithField("relayBlockHash", relayBlockHash.Hex()).Info("Got relay chain blockhash")
 
 		verifiedParaBlockNumber, err := li.relaychainConn.FetchLatestFinalizedParaBlockNumber(
-			relayBlockHash, OUR_PARACHAIN_ID)
+			relayBlockHash, li.paraID)
 		if err != nil {
 			li.log.WithError(err).Error("Failed to get latest finalized para block number from relay chain")
 			return err

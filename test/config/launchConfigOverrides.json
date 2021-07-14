@@ -1,7 +1,7 @@
 {
   "parachains": [
     {
-      "id": "200",
+      "id": "1000",
       "nodes": [
         {
           "wsPort": 11144,

@@ -22,7 +22,8 @@ module.exports = {
         "https://ropsten.infura.io/v3/".concat(process.env.INFURA_PROJECT_ID)
       ),
       network_id: 3,
-      gas: 6000000
+      gas: 8000000,
+      gasPrice: 50000000000
     }
   },
   mocha: {

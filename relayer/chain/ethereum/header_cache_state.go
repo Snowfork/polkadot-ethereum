@@ -100,18 +100,21 @@ type EthashproofCacheLoader interface {
 	MakeCache(epoch uint64) (*ethashproof.DatasetMerkleTreeCache, error)
 }
 
-type DefaultCacheLoader struct{}
+type DefaultCacheLoader struct{
+	dataDir string
+	cacheDir string
+}
 
 func (d *DefaultCacheLoader) MakeCache(epoch uint64) (*ethashproof.DatasetMerkleTreeCache, error) {
-	cache, err := ethashproof.LoadCache(int(epoch))
+	cache, err := ethashproof.LoadCache(int(epoch), d.cacheDir)
 	if err != nil {
 		// Cache probably doesn't exist - create it
-		_, err := ethashproof.CalculateDatasetMerkleRoot(epoch, true)
+		_, err := ethashproof.CalculateDatasetMerkleRoot(epoch, true, d.dataDir, d.cacheDir)
 		if err != nil {
 			return nil, err
 		}
 
-		return ethashproof.LoadCache(int(epoch))
+		return ethashproof.LoadCache(int(epoch), d.cacheDir)
 	}
 
 	return cache, nil
@@ -126,6 +129,8 @@ type EthashproofCacheState struct {
 // HeaderCacheState fetches and caches data we need to construct proofs
 // as we move along the Ethereum chain.
 type HeaderCacheState struct {
+	dataDir                string
+	cacheDir               string
 	blockLoader            BlockLoader
 	blockCache             *BlockCache
 	ethashproofCacheLoader EthashproofCacheLoader
@@ -134,6 +139,8 @@ type HeaderCacheState struct {
 }
 
 func NewHeaderCacheState(
+	dataDir string,
+	cacheDir string,
 	eg *errgroup.Group,
 	initBlockHeight uint64,
 	bl BlockLoader,
@@ -152,10 +159,12 @@ func NewHeaderCacheState(
 
 	ethashproofCacheLoader := ecl
 	if ethashproofCacheLoader == nil {
-		ethashproofCacheLoader = &DefaultCacheLoader{}
+		ethashproofCacheLoader = &DefaultCacheLoader{dataDir, cacheDir}
 	}
 
 	state := HeaderCacheState{
+		dataDir:                dataDir,
+		cacheDir:               cacheDir,
 		blockCache:             blockCache,
 		blockLoader:            blockLoader,
 		ethashproofCacheLoader: ethashproofCacheLoader,

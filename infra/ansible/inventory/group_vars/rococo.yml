@@ -1,5 +1,0 @@
----
-ansible_user: ubuntu
-ansible_become: yes
-ansible_become_method: sudo
-ansible_become_user: root

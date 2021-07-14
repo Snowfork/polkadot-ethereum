@@ -81,8 +81,8 @@ start_polkadot_launch()
     node ../test/scripts/helpers/overrideParachainSpec.js $configdir/spec.json \
         genesis.runtime.verifierLightclient.initialDifficulty 0x0 \
         genesis.runtime.verifierLightclient.initialHeader "$ethereum_initial_header" \
-        genesis.runtime.parachainInfo.parachainId 200 \
-        para_id 200
+        genesis.runtime.parachainInfo.parachainId 1000 \
+        para_id 1000
 
     if [ $# -eq 1 ] && [ $1 = "malicious" ]; then
         jq '.genesis.runtime.dotApp.address = "0x433488cec14C4478e5ff18DDC7E7384Fc416f148"' \
@@ -104,8 +104,8 @@ start_polkadot_launch()
         node ../test/scripts/helpers/overrideParachainSpec.js $configdir/spec2.json \
             genesis.runtime.verifierLightclient.initialDifficulty 0x0 \
             genesis.runtime.verifierLightclient.initialHeader "$ethereum_initial_header" \
-            genesis.runtime.parachainInfo.parachainId 201 \
-            para_id 201
+            genesis.runtime.parachainInfo.parachainId 1001 \
+            para_id 1001
         jq  -s '.[0] * .[1]' config-dup.json ../test/config/launchConfigOverridesDup.json \
             | jq ".parachains[0].bin = \"$bin\"" \
             | jq ".parachains[0].chain = \"$configdir/spec.json\"" \
@@ -136,10 +136,10 @@ start_relayer()
 
     mage build
 
-    export BEEFY_RELAYER_ETHEREUM_KEY="0x935b65c833ced92c43ef9de6bff30703d941bd92a2637cb00cfad389f5862109"
-    export PARACHAIN_COMMITMENT_RELAYER_ETHEREUM_KEY="0x8013383de6e5a891e7754ae1ef5a21e7661f1fe67cd47ca8ebf4acd6de66879a"
-    export ARTEMIS_PARACHAIN_KEY="//Relay"
-    export ARTEMIS_RELAYCHAIN_KEY="//Alice"
+    export SNOWBRIDGE_BEEFY_KEY="0x935b65c833ced92c43ef9de6bff30703d941bd92a2637cb00cfad389f5862109"
+    export SNOWBRIDGE_MESSAGE_KEY="0x8013383de6e5a891e7754ae1ef5a21e7661f1fe67cd47ca8ebf4acd6de66879a"
+    export SNOWBRIDGE_PARACHAIN_KEY="//Relay"
+    export SNOWBRIDGE_RELAYCHAIN_KEY="//Alice"
 
     build/artemis-relay run --config $configdir/config.toml >$logfile 2>&1 &
 

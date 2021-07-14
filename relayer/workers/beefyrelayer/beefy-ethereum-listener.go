@@ -31,9 +31,15 @@ type BeefyEthereumListener struct {
 	log              *logrus.Entry
 }
 
-func NewBeefyEthereumListener(ethereumConfig *ethereum.Config, ethereumConn *ethereum.Connection, beefyDB *store.Database,
-	beefyMessages chan<- store.BeefyRelayInfo, dbMessages chan<- store.DatabaseCmd, headers chan<- chain.Header,
-	log *logrus.Entry) *BeefyEthereumListener {
+func NewBeefyEthereumListener(
+	ethereumConfig *ethereum.Config,
+	ethereumConn *ethereum.Connection,
+	beefyDB *store.Database,
+	beefyMessages chan<- store.BeefyRelayInfo,
+	dbMessages chan<- store.DatabaseCmd,
+	headers chan<- chain.Header,
+	log *logrus.Entry,
+) *BeefyEthereumListener {
 	return &BeefyEthereumListener{
 		ethereumConfig:  ethereumConfig,
 		ethereumConn:    ethereumConn,

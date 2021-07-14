@@ -5,6 +5,9 @@ package ethrelayer
 
 import (
 	"context"
+	"errors"
+	"os"
+	"path/filepath"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -23,6 +26,8 @@ import (
 
 // EthereumListener streams the Ethereum blockchain for application events
 type EthereumListener struct {
+	dataDir                     string
+	cacheDir                    string
 	config                      *ethereum.Config
 	conn                        *ethereum.Connection
 	basicOutboundChannel        *basic.BasicOutboundChannel
@@ -34,12 +39,15 @@ type EthereumListener struct {
 }
 
 func NewEthereumListener(
+	dataDir string,
 	config *ethereum.Config,
 	conn *ethereum.Connection,
 	payloads chan<- ParachainPayload,
 	log *logrus.Entry,
 ) *EthereumListener {
 	return &EthereumListener{
+		dataDir:                     filepath.Join(dataDir, "ethash-data"),
+		cacheDir:                    filepath.Join(dataDir, "ethash-cache"),
 		config:                      config,
 		conn:                        conn,
 		basicOutboundChannel:        nil,
@@ -58,7 +66,23 @@ func (li *EthereumListener) Start(cxt context.Context, eg *errgroup.Group, initB
 		return err
 	}
 
+	var err error
+
+	err = os.Mkdir(li.dataDir, 0755)
+	if err != nil && !errors.Is(err, os.ErrExist) {
+		li.log.WithError(err).Error("Could not create data dir")
+		return err
+	}
+
+	err = os.Mkdir(li.cacheDir, 0755)
+	if err != nil && !errors.Is(err, os.ErrExist) {
+		li.log.WithError(err).Error("Could not create cache dir")
+		return err
+	}
+
 	hcs, err := ethereum.NewHeaderCacheState(
+		li.dataDir,
+		li.cacheDir,
 		eg,
 		initBlockHeight,
 		&ethereum.DefaultBlockLoader{Conn: li.conn},
@@ -268,7 +292,7 @@ func (li *EthereumListener) makeOutgoingHeader(
 		return nil, err
 	}
 
-	header, err := ethereum.MakeHeaderFromEthHeader(gethheader, cache, li.log)
+	header, err := ethereum.MakeHeaderFromEthHeader(gethheader, cache, li.dataDir, li.log)
 	if err != nil {
 		li.log.WithFields(logrus.Fields{
 			"blockHash":   gethheader.Hash().Hex(),

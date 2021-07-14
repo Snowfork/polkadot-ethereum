@@ -9,18 +9,17 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"math/big"
+	"path/filepath"
 	"strconv"
 
 	gethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	gethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/snowfork/go-substrate-rpc-client/v3/scale"
 	"github.com/snowfork/polkadot-ethereum/relayer/chain/ethereum"
-	"github.com/snowfork/polkadot-ethereum/relayer/core"
+	"github.com/spf13/viper"
 )
 
 type Format string
@@ -32,17 +31,20 @@ const (
 
 func getBlockCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "getblock",
+		Use:     "dump-block",
 		Short:   "Retrieve a block, either specified by hash or the latest finalized block",
 		Args:    cobra.ExactArgs(0),
-		Example: "artemis-relay getblock",
+		Example: "artemis-relay dump-block",
 		RunE:    GetBlockFn,
 	}
 	cmd.Flags().StringP("block", "b", "", "Block hash")
+	cmd.Flags().StringP("url", "u", "", "Ethereum endpoint")
+	cmd.Flags().StringP("descendants-until-final", "d", "", "Descendants until finals")
+
 	cmd.Flags().StringP(
 		"format",
 		"f",
-		"rust",
+		"json",
 		"The output format. Options are 'rust' and 'json'. They correspond to the Substrate genesis config formats.",
 	)
 	cmd.Flags().BoolP(
@@ -55,11 +57,6 @@ func getBlockCmd() *cobra.Command {
 }
 
 func GetBlockFn(cmd *cobra.Command, _ []string) error {
-	config, err := core.LoadConfig()
-	if err != nil {
-		return err
-	}
-
 	hashStr := cmd.Flags().Lookup("block").Value.String()
 	var blockHash *gethCommon.Hash
 	if len(hashStr) > 0 {
@@ -76,7 +73,8 @@ func GetBlockFn(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	header, err := getEthBlock(&config.Eth, blockHash)
+	url := cmd.Flags().Lookup("url").Value.String()
+	header, err := getEthBlock(url, blockHash)
 	if err != nil {
 		return err
 	}
@@ -98,35 +96,25 @@ func GetBlockFn(cmd *cobra.Command, _ []string) error {
 	return printEthHeaderProofForSub(proof)
 }
 
-func getEthBlock(config *ethereum.Config, blockHash *gethCommon.Hash) (*gethTypes.Header, error) {
+func getEthBlock(url string, blockHash *gethCommon.Hash) (*gethTypes.Header, error) {
 	ctx := context.Background()
-	client, err := ethclient.Dial(config.Endpoint)
+	client, err := ethclient.Dial(url)
 	if err != nil {
 		return nil, err
 	}
 	defer client.Close()
 
-	chainID, err := client.NetworkID(ctx)
-	logrus.WithFields(logrus.Fields{
-		"endpoint": config.Endpoint,
-		"chainID":  chainID,
-	}).Info("Connected to chain")
-
 	var header *gethTypes.Header
 	if blockHash == nil {
-		latest, err := client.HeaderByNumber(ctx, nil)
+		header, err = client.HeaderByNumber(ctx, nil)
 		if err != nil {
 			return nil, err
 		}
-		header, err = client.HeaderByNumber(
-			ctx,
-			new(big.Int).Sub(latest.Number, big.NewInt(int64(config.DescendantsUntilFinal))),
-		)
 	} else {
 		header, err = client.HeaderByHash(ctx, *blockHash)
-	}
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return header, nil
@@ -139,7 +127,13 @@ func getEthHeaderProof(header *gethTypes.Header) ([]ethereum.DoubleNodeWithMerkl
 		return nil, err
 	}
 
-	return ethereum.MakeProofData(header, cache)
+	if !viper.IsSet("global.data-dir") {
+		return nil, fmt.Errorf("data-dir not set in config")
+	}
+
+	dataDir := filepath.Join(viper.GetString("global.data-dir"), "ethash-data")
+
+	return ethereum.MakeProofData(header, cache, dataDir)
 }
 
 func printEthBlockForSub(header *gethTypes.Header, format Format) error {
@@ -148,28 +142,28 @@ func printEthBlockForSub(header *gethTypes.Header, format Format) error {
 		return err
 	}
 
-	fmt.Println("")
 	if format == RustFmt {
 		fmt.Printf(
-			`EthereumHeader {
-			parent_hash: hex!("%x").into(),
-			timestamp: %du64.into(),
-			number: %du64.into(),
-			author: hex!("%x").into(),
-			transactions_root: hex!("%x").into(),
-			ommers_hash: hex!("%x").into(),
-			extra_data: hex!("%x").into(),
-			state_root: hex!("%x").into(),
-			receipts_root: hex!("%x").into(),
-			logs_bloom: (&hex!("%x")).into(),
-			gas_used: %du64.into(),
-			gas_limit: %du64.into(),
-			difficulty: %du64.into(),
-			seal: vec![
-				hex!("%x").to_vec(),
-				hex!("%x").to_vec(),
-			],
-		}`,
+`EthereumHeader {
+	parent_hash: hex!("%x").into(),
+	timestamp: %du64.into(),
+	number: %du64.into(),
+	author: hex!("%x").into(),
+	transactions_root: hex!("%x").into(),
+	ommers_hash: hex!("%x").into(),
+	extra_data: hex!("%x").into(),
+	state_root: hex!("%x").into(),
+	receipts_root: hex!("%x").into(),
+	logs_bloom: (&hex!("%x")).into(),
+	gas_used: %du64.into(),
+	gas_limit: %du64.into(),
+	difficulty: %du64.into(),
+	seal: vec![
+		hex!("%x").to_vec(),
+		hex!("%x").to_vec(),
+	],
+}
+`,
 			headerForSub.Fields.ParentHash,
 			header.Time,
 			headerForSub.Fields.Number,
@@ -206,25 +200,25 @@ func printEthBlockForSub(header *gethTypes.Header, format Format) error {
 		}
 
 		fmt.Printf(
-			`{
-			"parent_hash": "%s",
-			"timestamp": %d,
-			"number": %d,
-			"author": "%s",
-			"transactions_root": "%s",
-			"ommers_hash": "%s",
-			"extra_data": %s,
-			"state_root": "%s",
-			"receipts_root": "%s",
-			"logs_bloom": %s,
-			"gas_used": "%#x",
-			"gas_limit": "%#x",
-			"difficulty": "%#x",
-			"seal": [
-				%s,
-				%s
-			]
-		}`,
+`{
+  "parent_hash": "%s",
+  "timestamp": %d,
+  "number": %d,
+  "author": "%s",
+  "transactions_root": "%s",
+  "ommers_hash": "%s",
+  "extra_data": %s,
+  "state_root": "%s",
+  "receipts_root": "%s",
+  "logs_bloom": %s,
+  "gas_used": "%#x",
+  "gas_limit": "%#x",
+  "difficulty": "%#x",
+  "seal": [
+    %s,
+    %s
+  ]
+}`,
 			headerForSub.Fields.ParentHash.Hex(),
 			header.Time,
 			headerForSub.Fields.Number,

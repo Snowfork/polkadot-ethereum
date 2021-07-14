@@ -1,11 +1,4 @@
-#[cfg(feature = "with-snowbridge-runtime")]
-use crate::chain_spec::snowbridge::Extensions;
-
-#[cfg(feature = "with-rococo-runtime")]
-use crate::chain_spec::rococo::Extensions;
-
-#[cfg(feature = "with-local-runtime")]
-use crate::chain_spec::local::Extensions;
+use crate::chain_spec::Extensions;
 
 use sc_cli;
 use std::path::PathBuf;

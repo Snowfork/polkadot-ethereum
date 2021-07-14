@@ -30,10 +30,10 @@ func Install() error {
 func SubBeef() error {
 	cmd := "go"
 	env := map[string]string{
-		"BEEFY_RELAYER_ETHEREUM_KEY":                "0x935b65c833ced92c43ef9de6bff30703d941bd92a2637cb00cfad389f5862109",
-		"PARACHAIN_COMMITMENT_RELAYER_ETHEREUM_KEY": "0x8013383de6e5a891e7754ae1ef5a21e7661f1fe67cd47ca8ebf4acd6de66879a",
-		"ARTEMIS_PARACHAIN_KEY":                     "//Relay",
-		"ARTEMIS_RELAYCHAIN_KEY":                    "//Alice",
+		"SNOWBRIDGE_BEEFY_KEY":      "0x935b65c833ced92c43ef9de6bff30703d941bd92a2637cb00cfad389f5862109",
+		"SNOWBRIDGE_MESSAGE_KEY":    "0x8013383de6e5a891e7754ae1ef5a21e7661f1fe67cd47ca8ebf4acd6de66879a",
+		"SNOWBRIDGE_PARACHAIN_KEY":  "//Relay",
+		"SNOWBRIDGE_RELAYCHAIN_KEY": "//Alice",
 	}
 	return sh.RunWithV(env, cmd, "run", "./main.go", "sub-beefy", "--config", "/tmp/snowbridge-e2e-config/config.toml")
 }
@@ -41,10 +41,10 @@ func SubBeef() error {
 func Dev() error {
 	cmd := "go"
 	env := map[string]string{
-		"BEEFY_RELAYER_ETHEREUM_KEY":                "0x935b65c833ced92c43ef9de6bff30703d941bd92a2637cb00cfad389f5862109",
-		"PARACHAIN_COMMITMENT_RELAYER_ETHEREUM_KEY": "0x8013383de6e5a891e7754ae1ef5a21e7661f1fe67cd47ca8ebf4acd6de66879a",
-		"ARTEMIS_PARACHAIN_KEY":                     "//Relay",
-		"ARTEMIS_RELAYCHAIN_KEY":                    "//Alice",
+		"SNOWBRIDGE_BEEFY_KEY":      "0x935b65c833ced92c43ef9de6bff30703d941bd92a2637cb00cfad389f5862109",
+		"SNOWBRIDGE_MESSAGE_KEY":    "0x8013383de6e5a891e7754ae1ef5a21e7661f1fe67cd47ca8ebf4acd6de66879a",
+		"SNOWBRIDGE_PARACHAIN_KEY":  "//Relay",
+		"SNOWBRIDGE_RELAYCHAIN_KEY": "//Alice",
 	}
 	return sh.RunWithV(env, cmd, "run", "./main.go", "run", "--config", "/tmp/snowbridge-e2e-config/config.toml")
 }

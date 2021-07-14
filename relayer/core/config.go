@@ -9,7 +9,6 @@ import (
 	"github.com/snowfork/polkadot-ethereum/relayer/chain/parachain"
 	"github.com/snowfork/polkadot-ethereum/relayer/chain/relaychain"
 	"github.com/snowfork/polkadot-ethereum/relayer/workers"
-	"github.com/snowfork/polkadot-ethereum/relayer/workers/beefyrelayer/store"
 	"github.com/spf13/viper"
 )
 
@@ -19,11 +18,15 @@ type WorkerConfig struct {
 	EthRelayer                 workers.WorkerConfig `mapstructure:"ethrelayer"`
 }
 
+type GlobalConfig struct {
+	DataDir string `mapstructure:"data-dir"`
+}
+
 type Config struct {
+	Global               GlobalConfig      `mapstructure:"global"`
 	Eth                  ethereum.Config   `mapstructure:"ethereum"`
 	Parachain            parachain.Config  `mapstructure:"parachain"`
 	Relaychain           relaychain.Config `mapstructure:"relaychain"`
-	BeefyRelayerDatabase store.Config      `mapstructure:"database"`
 	Workers              WorkerConfig      `mapstructure:"workers"`
 }
 
@@ -39,29 +42,29 @@ func LoadConfig() (*Config, error) {
 	var ok bool
 
 	// Ethereum configuration
-	value, ok = os.LookupEnv("BEEFY_RELAYER_ETHEREUM_KEY")
+	value, ok = os.LookupEnv("SNOWBRIDGE_BEEFY_KEY")
 	if !ok {
-		return nil, fmt.Errorf("environment variable not set: BEEFY_RELAYER_ETHEREUM_KEY")
+		return nil, fmt.Errorf("environment variable not set: SNOWBRIDGE_BEEFY_KEY")
 	}
 	config.Eth.BeefyPrivateKey = strings.TrimPrefix(value, "0x")
 
-	value, ok = os.LookupEnv("PARACHAIN_COMMITMENT_RELAYER_ETHEREUM_KEY")
+	value, ok = os.LookupEnv("SNOWBRIDGE_MESSAGE_KEY")
 	if !ok {
-		return nil, fmt.Errorf("environment variable not set: PARACHAIN_COMMITMENT_RELAYER_ETHEREUM_KEY")
+		return nil, fmt.Errorf("environment variable not set: SNOWBRIDGE_MESSAGE_KEY")
 	}
-	config.Eth.ParachainCommitmentsPrivateKey = strings.TrimPrefix(value, "0x")
+	config.Eth.MessagePrivateKey = strings.TrimPrefix(value, "0x")
 
 	// Parachain configuration
-	value, ok = os.LookupEnv("ARTEMIS_PARACHAIN_KEY")
+	value, ok = os.LookupEnv("SNOWBRIDGE_PARACHAIN_KEY")
 	if !ok {
-		return nil, fmt.Errorf("environment variable not set: ARTEMIS_PARACHAIN_KEY")
+		return nil, fmt.Errorf("environment variable not set: SNOWBRIDGE_PARACHAIN_KEY")
 	}
 	config.Parachain.PrivateKey = value
 
 	// Relaychain configuration
-	value, ok = os.LookupEnv("ARTEMIS_RELAYCHAIN_KEY")
+	value, ok = os.LookupEnv("SNOWBRIDGE_RELAYCHAIN_KEY")
 	if !ok {
-		return nil, fmt.Errorf("environment variable not set: ARTEMIS_RELAYCHAIN_KEY")
+		return nil, fmt.Errorf("environment variable not set: SNOWBRIDGE_RELAYCHAIN_KEY")
 	}
 	config.Relaychain.PrivateKey = value
 

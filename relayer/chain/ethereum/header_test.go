@@ -143,7 +143,9 @@ func TestProof_EncodeDecode(t *testing.T) {
 	cache := proofCache11090290()
 	expectedEncoded := encodedProof11090290()
 
-	proof, err := ethereum.MakeProofData(&gethHeader, cache)
+	dataDir := "/tmp"
+
+	proof, err := ethereum.MakeProofData(&gethHeader, cache, dataDir)
 	if err != nil {
 		panic(err)
 	}

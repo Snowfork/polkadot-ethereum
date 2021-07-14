@@ -17,6 +17,7 @@ import (
 )
 
 type Worker struct {
+	dataDir     string
 	ethconfig  *ethereum.Config
 	ethconn    *ethereum.Connection
 	paraconfig *parachain.Config
@@ -26,8 +27,14 @@ type Worker struct {
 
 const Name = "eth-relayer"
 
-func NewWorker(ethconfig *ethereum.Config, paraconfig *parachain.Config, log *logrus.Entry) *Worker {
+func NewWorker(
+	dataDir   string,
+	ethconfig *ethereum.Config,
+	paraconfig *parachain.Config,
+	log *logrus.Entry,
+) *Worker {
 	return &Worker{
+		dataDir:    dataDir,
 		ethconfig:  ethconfig,
 		paraconfig: paraconfig,
 		log:        log,
@@ -55,6 +62,7 @@ func (w *Worker) Start(ctx context.Context, eg *errgroup.Group) error {
 	payloads := make(chan ParachainPayload, 1)
 
 	listener := NewEthereumListener(
+		w.dataDir,
 		w.ethconfig,
 		w.ethconn,
 		payloads,

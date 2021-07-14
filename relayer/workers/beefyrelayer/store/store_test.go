@@ -31,19 +31,15 @@ func TestStoreTestSuite(t *testing.T) {
 }
 
 func (suite *StoreTestSuite) SetupTest() {
-	config := store.Config{
-		Dialect: "sqlite3",
-		DBPath:  "tmp.db",
-	}
-
-	db, err := store.PrepareDatabase(&config)
-	if err != nil {
-		suite.Fail(err.Error())
-	}
 
 	messages := make(chan store.DatabaseCmd, 1)
 	logger := logrus.WithField("database", "Beefy")
-	database := store.NewDatabase(db, messages, logger)
+	database := store.NewDatabase(messages, logger)
+
+	err := database.Initialize()
+	if err != nil {
+		suite.Fail(err.Error())
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	eg, ctx := errgroup.WithContext(ctx)

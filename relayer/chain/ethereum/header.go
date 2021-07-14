@@ -74,6 +74,7 @@ type DoubleNodeWithMerkleProof struct {
 func MakeHeaderFromEthHeader(
 	gethheader *etypes.Header,
 	proofcache *ethashproof.DatasetMerkleTreeCache,
+	dataDir     string,
 	log *logrus.Entry,
 ) (*chain.Header, error) {
 	headerData, err := MakeHeaderData(gethheader)
@@ -81,7 +82,7 @@ func MakeHeaderFromEthHeader(
 		return nil, err
 	}
 
-	proofData, err := MakeProofData(gethheader, proofcache)
+	proofData, err := MakeProofData(gethheader, proofcache, dataDir)
 	if err != nil {
 		return nil, err
 	}
@@ -143,6 +144,7 @@ func MakeHeaderData(gethheader *etypes.Header) (*Header, error) {
 func MakeProofData(
 	gethheader *etypes.Header,
 	proofcache *ethashproof.DatasetMerkleTreeCache,
+	dataDir    string,
 ) ([]DoubleNodeWithMerkleProof, error) {
 	// Generate merkle proofs for Ethash
 	blockNumber := gethheader.Number.Uint64()
@@ -154,7 +156,7 @@ func MakeProofData(
 
 	proofData := make([]DoubleNodeWithMerkleProof, len(indices))
 	for i, index := range indices {
-		element, proof, err := ethashproof.CalculateProof(blockNumber, index, proofcache)
+		element, proof, err := ethashproof.CalculateProof(blockNumber, index, proofcache, dataDir)
 		if err != nil {
 			return nil, err
 		}

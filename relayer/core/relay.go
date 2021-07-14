@@ -22,6 +22,7 @@ func (re *Relay) Run() error {
 	if config.Workers.EthRelayer.Enabled {
 		ethrelayerFactory := func() (workers.Worker, *workers.WorkerConfig, error) {
 			return ethrelayer.NewWorker(
+				config.Global.DataDir,
 				&config.Eth,
 				&config.Parachain,
 				logrus.WithField("worker", ethrelayer.Name),
@@ -35,7 +36,6 @@ func (re *Relay) Run() error {
 			beefyRelayer, err := beefyrelayer.NewWorker(
 				&config.Relaychain,
 				&config.Eth,
-				&config.BeefyRelayerDatabase,
 				logrus.WithField("worker", beefyrelayer.Name),
 			)
 			if err != nil {

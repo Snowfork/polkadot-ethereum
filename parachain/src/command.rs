@@ -7,20 +7,22 @@ use cumulus_primitives_core::ParaId;
 use cumulus_client_service::genesis::generate_genesis_block;
 use log::info;
 
+use crate::chain_spec::Extensions;
+
 #[cfg(feature = "with-snowbridge-runtime")]
 use snowbridge_runtime::opaque::Block;
 #[cfg(feature = "with-snowbridge-runtime")]
-use crate::chain_spec::snowbridge::{get_chain_spec, ChainSpec, Extensions};
+use crate::chain_spec::snowbridge::{get_chain_spec, ChainSpec};
 
 #[cfg(feature = "with-rococo-runtime")]
 use rococo_runtime::opaque::Block;
 #[cfg(feature = "with-rococo-runtime")]
-use crate::chain_spec::rococo::{get_chain_spec, ChainSpec, Extensions};
+use crate::chain_spec::rococo::{get_chain_spec, ChainSpec};
 
 #[cfg(feature = "with-local-runtime")]
 use local_runtime::opaque::Block;
 #[cfg(feature = "with-local-runtime")]
-use crate::chain_spec::local::{get_chain_spec, ChainSpec, Extensions};
+use crate::chain_spec::local::{get_chain_spec, ChainSpec};
 
 use polkadot_parachain::primitives::AccountIdConversion;
 use sc_cli::{
@@ -34,6 +36,8 @@ use sc_service::{
 use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::Block as BlockT;
 use std::{io::Write, net::SocketAddr};
+
+const DEFAULT_PARA_ID: u32 = 1000;
 
 fn load_spec(
 	id: &str,
@@ -77,7 +81,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
-		load_spec(id, self.run.parachain_id.unwrap_or(100).into())
+		load_spec(id, self.run.parachain_id.unwrap_or(DEFAULT_PARA_ID).into())
 	}
 
 	#[cfg(feature = "with-snowbridge-runtime")]

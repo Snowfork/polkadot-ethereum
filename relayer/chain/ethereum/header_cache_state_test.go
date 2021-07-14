@@ -10,10 +10,10 @@ import (
 	gethCommon "github.com/ethereum/go-ethereum/common"
 	gethTypes "github.com/ethereum/go-ethereum/core/types"
 	gethTrie "github.com/ethereum/go-ethereum/trie"
+	"github.com/snowfork/ethashproof"
 	"github.com/snowfork/polkadot-ethereum/relayer/chain/ethereum"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/snowfork/ethashproof"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -116,7 +116,7 @@ func TestHeaderCacheState_EthashproofCacheLoading(t *testing.T) {
 	cacheLoader.On("MakeCache", uint64(3)).Return(&ethashproof.DatasetMerkleTreeCache{Epoch: 3}, nil)
 
 	// Should load epoch 0 and 1 caches
-	hcs, err := ethereum.NewHeaderCacheState(eg, 0, &TestBlockLoader{}, &cacheLoader)
+	hcs, err := ethereum.NewHeaderCacheState("", "", eg, 0, &TestBlockLoader{}, &cacheLoader)
 	if err != nil {
 		panic(err)
 	}
@@ -164,7 +164,7 @@ func TestHeaderCacheState_BlockCacheLoading(t *testing.T) {
 		blockLoader.On("GetAllReceipts", datum.Block).Return(datum.Receipts, nil)
 	}
 
-	hcs, err := ethereum.NewHeaderCacheState(&errgroup.Group{}, 0, &blockLoader, &cacheLoader)
+	hcs, err := ethereum.NewHeaderCacheState("", "", &errgroup.Group{}, 0, &blockLoader, &cacheLoader)
 	if err != nil {
 		panic(err)
 	}
@@ -209,7 +209,7 @@ func TestHeaderCacheState_ReceiptTrieCreation(t *testing.T) {
 	blockLoader.On("GetBlock", block.Hash()).Return(block, nil)
 	blockLoader.On("GetAllReceipts", block).Return(receipts, nil)
 
-	hcs, err := ethereum.NewHeaderCacheState(&errgroup.Group{}, 0, &blockLoader, &cacheLoader)
+	hcs, err := ethereum.NewHeaderCacheState("", "", &errgroup.Group{}, 0, &blockLoader, &cacheLoader)
 	if err != nil {
 		panic(err)
 	}

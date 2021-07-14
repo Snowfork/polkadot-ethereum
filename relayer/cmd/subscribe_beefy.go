@@ -24,15 +24,26 @@ func subBeefyCmd() *cobra.Command {
 		Example: "artemis-relay sub-beefy",
 		RunE:    SubBeefyFn,
 	}
+	cmd.Flags().UintP(
+		"para-id",
+		"i",
+		1000,
+		"Parachain ID",
+	)
+	cmd.MarkFlagRequired("para-id")
 	return cmd
 }
 
 func SubBeefyFn(cmd *cobra.Command, _ []string) error {
-	subBeefyJustifications(cmd.Context())
+	paraID, err := cmd.Flags().GetUint32("para-id")
+	if err != nil {
+		return err
+	}
+	subBeefyJustifications(cmd.Context(), paraID)
 	return nil
 }
 
-func subBeefyJustifications(ctx context.Context) error {
+func subBeefyJustifications(ctx context.Context, paraID uint32) error {
 	log.Info("Loading config")
 	config, err := core.LoadConfig()
 	if err != nil {
@@ -91,7 +102,7 @@ func subBeefyJustifications(ctx context.Context) error {
 			}
 			log.WithField("blockHash", nextBlockHash.Hex()).Info("Got blockhash")
 			GetMMRLeafForBlock(uint64(blockNumber), nextBlockHash, relaychainConn)
-			allParaheads, ourParahead := GetAllParaheads(nextBlockHash, relaychainConn, OUR_PARACHAIN_ID)
+			allParaheads, ourParahead := GetAllParaheads(nextBlockHash, relaychainConn, paraID)
 			log.WithFields(logrus.Fields{
 				"allParaheads": allParaheads,
 				"ourParahead":  ourParahead,
@@ -103,7 +114,7 @@ func subBeefyJustifications(ctx context.Context) error {
 	}
 }
 
-func GetAllParaheads(blockHash types.Hash, relaychainConn *relaychain.Connection, ourParachainId uint32) ([]types.Header, types.Header) {
+func GetAllParaheads(blockHash types.Hash, relaychainConn *relaychain.Connection, ourParachainID uint32) ([]types.Header, types.Header) {
 	none := types.NewOptionU32Empty()
 	encoded, err := types.EncodeToBytes(none)
 	if err != nil {
@@ -171,7 +182,7 @@ func GetAllParaheads(blockHash types.Hash, relaychainConn *relaychain.Connection
 			}).Info("Decoded header for parachain")
 			headers = append(headers, header)
 
-			if parachainID == types.U32(ourParachainId) {
+			if parachainID == types.U32(ourParachainID) {
 				ourParachainHeader = header
 			}
 		}

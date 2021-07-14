@@ -189,14 +189,14 @@ func (wr *ParachainWriter) write(ctx context.Context, c types.Call, onProcessed 
 
 func (wr *ParachainWriter) WritePayload(ctx context.Context, payload *ParachainPayload) error {
 	var calls []types.Call
-	call, err := wr.makeHeaderImportCall(ctx, payload.Header)
+	call, err := wr.makeHeaderImportCall(payload.Header)
 	if err != nil {
 		return err
 	}
 	calls = append(calls, call)
 
 	for _, msg := range payload.Messages {
-		call, err := wr.makeMessageSubmitCall(ctx, msg)
+		call, err := wr.makeMessageSubmitCall(msg)
 		if err != nil {
 			return err
 		}
@@ -224,7 +224,7 @@ func (wr *ParachainWriter) WritePayload(ctx context.Context, payload *ParachainP
 	return wr.write(ctx, call, onProcessed)
 }
 
-func (wr *ParachainWriter) makeMessageSubmitCall(ctx context.Context, msg *chain.EthereumOutboundMessage) (types.Call, error) {
+func (wr *ParachainWriter) makeMessageSubmitCall(msg *chain.EthereumOutboundMessage) (types.Call, error) {
 	if msg == (*chain.EthereumOutboundMessage)(nil) {
 		return types.Call{}, fmt.Errorf("Message is nil")
 	}
@@ -232,7 +232,7 @@ func (wr *ParachainWriter) makeMessageSubmitCall(ctx context.Context, msg *chain
 	return types.NewCall(wr.conn.GetMetadata(), msg.Call, msg.Args...)
 }
 
-func (wr *ParachainWriter) makeHeaderImportCall(ctx context.Context, header *chain.Header) (types.Call, error) {
+func (wr *ParachainWriter) makeHeaderImportCall(header *chain.Header) (types.Call, error) {
 	if header == (*chain.Header)(nil) {
 		return types.Call{}, fmt.Errorf("Header is nil")
 	}

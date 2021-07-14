@@ -35,6 +35,9 @@ const bridge = {
 
 const dump = (tmpDir, channels, bridge) => {
     const config = {
+        global: {
+            "data-dir": "/tmp/snowbridge-e2e-config",
+        },
         ethereum: {
             endpoint: "ws://localhost:8545/",
             startblock: 1,
@@ -56,10 +59,6 @@ const dump = (tmpDir, channels, bridge) => {
         },
         relaychain: {
             endpoint: "ws://127.0.0.1:9944/"
-        },
-        database: {
-            dialect: "sqlite3",
-            dbpath: "tmp.db",
         },
         workers: {
             parachaincommitmentrelayer: {

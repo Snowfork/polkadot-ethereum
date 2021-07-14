@@ -1,54 +1,18 @@
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
 use local_runtime::{
-	AccountId, EthereumHeader,
-	BalancesConfig, GenesisConfig,
-	SystemConfig, VerifierLightclientConfig,
-	BasicInboundChannelConfig, IncentivizedInboundChannelConfig,
-	ETHConfig, ERC20Config, DOTConfig, ERC721Config,
-	AssetsConfig, NFTConfig,
-	ParachainInfoConfig,
-	BasicOutboundChannelConfig,
-	IncentivizedOutboundChannelConfig,
-	LocalCouncilMembershipConfig,
-	SudoConfig,
-	WASM_BINARY, Signature,
-	AuraId, AuraConfig,
+	GenesisConfig, WASM_BINARY, Signature, AccountId, AuraId,
 };
-use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::{ChainType, Properties};
-use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public, U256};
 use sp_runtime::{Perbill, traits::{IdentifyAccount, Verify}};
+
+use super::{get_from_seed, Extensions};
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
 
 use artemis_core::AssetId;
-
-/// Helper function to generate a crypto pair from seed
-pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
-	TPublic::Pair::from_string(&format!("//{}", seed), None)
-		.expect("static values are valid; qed")
-		.public()
-}
-
-/// The extensions for the [`ChainSpec`].
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ChainSpecGroup, ChainSpecExtension)]
-#[serde(deny_unknown_fields)]
-pub struct Extensions {
-	/// The relay chain of the Parachain.
-	pub relay_chain: String,
-	/// The id of the Parachain.
-	pub para_id: u32,
-}
-
-impl Extensions {
-	/// Try to get the extension from the given `ChainSpec`.
-	pub fn try_get(chain_spec: &dyn sc_service::ChainSpec) -> Option<&Self> {
-		sc_chain_spec::get_extension(chain_spec.extensions())
-	}
-}
 
 type AccountPublic = <Signature as Verify>::Signer;
 
@@ -111,20 +75,20 @@ fn testnet_genesis(
 	para_id: ParaId
 ) -> GenesisConfig {
 	GenesisConfig {
-		frame_system: SystemConfig {
+		frame_system: local_runtime::SystemConfig {
 			// Add Wasm runtime to storage.
 			code: WASM_BINARY
 				.expect("WASM binary was not build, please build it!")
 				.to_vec(),
 			changes_trie_config: Default::default(),
 		},
-		pallet_balances: BalancesConfig {
+		pallet_balances: local_runtime::BalancesConfig {
 			// Configure endowed accounts with initial balance of 1 << 60.
 			balances: endowed_accounts.iter().cloned().map(|k|(k, 1 << 60)).collect(),
 		},
-		pallet_sudo: SudoConfig { key: get_account_id_from_seed::<sr25519::Public>("Alice") },
+		pallet_sudo: local_runtime::SudoConfig { key: get_account_id_from_seed::<sr25519::Public>("Alice") },
 		pallet_collective_Instance1: Default::default(),
-		pallet_membership_Instance1: LocalCouncilMembershipConfig {
+		pallet_membership_Instance1: local_runtime::LocalCouncilMembershipConfig {
 			members: vec![
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				get_account_id_from_seed::<sr25519::Public>("Bob"),
@@ -133,22 +97,22 @@ fn testnet_genesis(
 			],
 			phantom: Default::default()
 		},
-		basic_channel_inbound: BasicInboundChannelConfig {
+		basic_channel_inbound: local_runtime::BasicInboundChannelConfig {
 			source_channel: hex!["B8EA8cB425d85536b158d661da1ef0895Bb92F1D"].into(),
 		},
-		basic_channel_outbound: BasicOutboundChannelConfig {
+		basic_channel_outbound: local_runtime::BasicOutboundChannelConfig {
 			principal: get_account_id_from_seed::<sr25519::Public>("Alice"),
 			interval: 1,
 		},
-		incentivized_channel_inbound: IncentivizedInboundChannelConfig {
+		incentivized_channel_inbound: local_runtime::IncentivizedInboundChannelConfig {
 			source_channel: hex!["3f0839385DB9cBEa8E73AdA6fa0CFe07E321F61d"].into(),
 			reward_fraction: Perbill::from_percent(80)
 		},
-		incentivized_channel_outbound: IncentivizedOutboundChannelConfig {
+		incentivized_channel_outbound: local_runtime::IncentivizedOutboundChannelConfig {
 			fee: U256::from_str_radix("10000000000000000", 10).unwrap(), // 0.01 SnowEther
 			interval: 1,
 		},
-		assets: AssetsConfig {
+		assets: local_runtime::AssetsConfig {
 			balances: vec![
 				(
 					AssetId::ETH,
@@ -157,46 +121,28 @@ fn testnet_genesis(
 				)
 			]
 		},
-		nft: NFTConfig {
+		nft: local_runtime::NFTConfig {
 			tokens: vec![]
 		},
-		verifier_lightclient: VerifierLightclientConfig {
-			initial_header: EthereumHeader {
-				parent_hash: hex!("3be6a44fc5933721d257099178fa7c228fc74f1870e61bb074047eda1021d2cd").into(),
-				timestamp: 1609259210u64.into(),
-				number: 11550000u64.into(),
-				author: hex!("3ecef08d0e2dad803847e052249bb4f8bff2d5bb").into(),
-				transactions_root: hex!("d0265030710d32f7b0b7b20dbe8ca047c1cf1aa8d78b484f0534694eba85bc54").into(),
-				ommers_hash: hex!("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347").into(),
-				extra_data: hex!("73656f35").into(),
-				state_root: hex!("b17f72d61cc7dbd9862a2e7a0ca63268cb21a3e9ca6c895011502607f19ac7f1").into(),
-				receipts_root: hex!("9ed944cc02ace88e295db6fb85c8532fa444e6a4ed8a8b618d384dad0d3646bc").into(),
-				logs_bloom: (&hex!("19b343276249849050a087e0a20b7b059020be00215c22089409b112fada06b0cc9c714c2d600440c89d5a00da704d1d46da64004daf5b55c551dee6c37111e21119a1e09b42eb72df83622dd43864a89e093f4850d6020414cda740d2e211d1df008882aac08000013cd589b1bea9c046c203692c7894841012cc1b3001dbf85b1c94138374752151c4045cc5264aa210024e915141c2ac482251c4a6158174a3dd8140b8572015b211c1a59b98843103150c0a61a10d22123727e9da284463180c4222a90428247d216f24c7d99c1c040082e3d54745121a183a42ca0828a921b13dfc3c0b4460914035540290fea55c33229a8243045c8c349acd403934b4")).into(),
-				gas_used: 0xbe4f11.into(),
-				gas_limit: 0xbe8c43.into(),
-				difficulty: 0xda5fc499815fau64.into(),
-				seal: vec![
-					vec![ 160, 3, 99, 254, 41, 148, 9, 136, 202, 4, 55, 19, 132, 10, 201, 17, 179, 47, 42, 203, 77, 1, 14, 85, 150, 63, 45, 32, 29, 121, 249, 171, 87 ],
-					vec![ 136, 138, 229, 192, 112, 137, 44, 183, 12 ],
-				],
-			},
-			initial_difficulty: 19755084633726428633088u128.into(),
+		verifier_lightclient: local_runtime::VerifierLightclientConfig {
+			initial_header: Default::default(),
+			initial_difficulty: Default::default(),
 		},
-		eth_app: ETHConfig {
+		eth_app: local_runtime::ETHConfig {
 			address: hex!["440eDFFA1352B13227e8eE646f3Ea37456deC701"].into()
 		},
-		erc20_app: ERC20Config {
+		erc20_app: local_runtime::ERC20Config {
 			address: hex!["54D6643762E46036b3448659791adAf554225541"].into()
 		},
-		dot_app: DOTConfig {
+		dot_app: local_runtime::DOTConfig {
 			address: hex!["dAF13FA1997b9649b2bCC553732c67887A68022C"].into(),
 			phantom: Default::default(),
 		},
-		erc721_app: ERC721Config {
+		erc721_app: local_runtime::ERC721Config {
 			address: hex!["433488cec14C4478e5ff18DDC7E7384Fc416f148"].into(),
 		},
-		parachain_info: ParachainInfoConfig { parachain_id: para_id },
-		pallet_aura: AuraConfig {
+		parachain_info: local_runtime::ParachainInfoConfig { parachain_id: para_id },
+		pallet_aura: local_runtime::AuraConfig {
 			authorities: initial_authorities,
 		},
 		cumulus_pallet_aura_ext: Default::default(),

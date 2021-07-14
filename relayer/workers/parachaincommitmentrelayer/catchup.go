@@ -155,7 +155,7 @@ func (li *BeefyListener) parablocksWithProofs(blocks []ParaBlockWithDigest, late
 				return nil, err
 			}
 			li.log.WithField("relayBlockHash", relayBlockHash.Hex()).Info("Got relay chain blockhash")
-			allParaHeads, ownParaHeadProofPos, ownParaHead, err = li.relaychainConn.GetAllParaheadsWithOwn(relayBlockHash, OUR_PARACHAIN_ID)
+			allParaHeads, ownParaHeadProofPos, ownParaHead, err = li.relaychainConn.GetAllParaheadsWithOwn(relayBlockHash, li.paraID)
 			if err != nil {
 				li.log.WithError(err).Error("Failed to get paraheads")
 				return nil, err
